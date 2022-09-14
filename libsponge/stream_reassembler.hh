@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <list>
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
 //! possibly overlapping) into an in-order byte stream.
@@ -14,6 +15,10 @@ class StreamReassembler {
 
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
+    std::list<std::pair<size_t,std::string>> _buf;
+    size_t _eof_index{UINT64_MAX};
+    //! \return _buf.end() if index should be the first element of _buf,an iterator which is the last element whose index less than index.
+    std::list<std::pair<size_t,std::string>>::iterator find_before(size_t index);
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
