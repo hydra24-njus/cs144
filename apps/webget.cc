@@ -9,13 +9,11 @@ using namespace std;
 void get_URL(const string &host, const string &path) {
     // Your code here.
     TCPSocket _tcp;
-    _tcp.connect(Address(host,"http"));
-    string _data="GET "+path+" HTTP/1.1\r\n"+
-                 "Host: "+host+"\r\n"+
-		 "Connection: close\r\n\r\n";
+    _tcp.connect(Address(host, "http"));
+    string _data = "GET " + path + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n";
     _tcp.write(_data);
-    while(!_tcp.eof()){
-        cout<<_tcp.read();
+    while (!_tcp.eof()) {
+        cout << _tcp.read();
     }
     _tcp.close();
     // You will need to connect to the "http" service on
