@@ -34,8 +34,9 @@ uint64_t TCPSender::bytes_in_flight() const {
 }
 
 void TCPSender::fill_window() {
-    size_t remain_size=_window_size;
-    while(remain_size!=0){
+    size_t remain_size=_window_size==0?1:_window_size;
+    remain_size-=bytes_in_flight();
+    while(remain_size>0){
         TCPSegment seg;
         TCPHeader &header=seg.header();
         if(!_syn_sent){
@@ -53,11 +54,12 @@ void TCPSender::fill_window() {
             header.fin=true;
         }
         if(seg.length_in_sequence_space()==0)break;
+        cout<<seg.header().syn<<" "<<seg.header().fin<<"\t"<<seg.payload().copy()<<endl;
         _segments_out.emplace(seg);
         _retrans_buf.emplace_back(seg);
         _next_seqno+=seg.length_in_sequence_space();
     }
-    _window_size=remain_size;
+    
 }
 
 //! \param ackno The remote receiver's ackno (acknowledgment number)
