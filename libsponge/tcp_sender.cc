@@ -21,7 +21,6 @@ using namespace std;
 TCPSender::TCPSender(const size_t capacity, const uint16_t retx_timeout, const std::optional<WrappingInt32> fixed_isn)
     : _isn(fixed_isn.value_or(WrappingInt32{random_device()()}))
     , _initial_retransmission_timeout{retx_timeout}
-    , _current_retransmission_timeout{retx_timeout}
     , _stream(capacity) {}
 
 uint64_t TCPSender::bytes_in_flight() const {
@@ -35,7 +34,8 @@ uint64_t TCPSender::bytes_in_flight() const {
 
 void TCPSender::fill_window() {
     size_t remain_size=_window_size==0?1:_window_size;
-    remain_size-=bytes_in_flight();
+    if(remain_size>bytes_in_flight())remain_size-=bytes_in_flight();
+    else return;
     while(remain_size>0){
         TCPSegment seg;
         TCPHeader &header=seg.header();
@@ -54,10 +54,13 @@ void TCPSender::fill_window() {
             header.fin=true;
         }
         if(seg.length_in_sequence_space()==0)break;
-        cout<<seg.header().syn<<" "<<seg.header().fin<<"\t"<<seg.payload().copy()<<endl;
+        //cout<<seg.header().syn<<" "<<seg.header().fin<<"\t"<<seg.payload().copy()<<endl;
         _segments_out.emplace(seg);
         _retrans_buf.emplace_back(seg);
         _next_seqno+=seg.length_in_sequence_space();
+        if(!_timer.statu()){
+            _timer.start(_initial_retransmission_timeout);
+        }
     }
     
 }
@@ -71,20 +74,40 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
         //debug.
         return;
     }
+    bool flag=false;
     for(auto it=_retrans_buf.begin();it!=_retrans_buf.end();){
         TCPSegment seg=*it;
         if(unwrap(seg.header().seqno,_isn,_next_seqno)+seg.length_in_sequence_space()<=ackno_seq){
             it=_retrans_buf.erase(it);
-            //TODO: 重置计时器
+            flag=true;
         }
         else break;
+    }
+    if(_retrans_buf.empty()){
+        _timer.reset();
+        _retrans_count=0;
+        return;
+    }
+    if(flag){
+        _timer.start(_initial_retransmission_timeout);
+        _retrans_count=0;
     }
 }
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
-void TCPSender::tick(const size_t ms_since_last_tick) { DUMMY_CODE(ms_since_last_tick); }
+void TCPSender::tick(const size_t ms_since_last_tick) {
+    //cout<<"tick"<<endl;
+    _timer.update(ms_since_last_tick);
+    if(_timer.trip()){
+        _segments_out.emplace(_retrans_buf.front());
+        if(_window_size>0)_retrans_count++;
+        _timer.start(_initial_retransmission_timeout<<_retrans_count);
+    }
+}
 
-unsigned int TCPSender::consecutive_retransmissions() const { return {}; }
+unsigned int TCPSender::consecutive_retransmissions() const {
+    return _retrans_count;
+}
 
 void TCPSender::send_empty_segment() {
     TCPSegment seg;

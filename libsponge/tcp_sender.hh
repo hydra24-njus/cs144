@@ -9,6 +9,36 @@
 #include <functional>
 #include <queue>
 
+class Timer {
+  private:
+    size_t current_time{0};
+    size_t current_timeout{0};
+    bool status{false};
+  public:
+    void reset(){
+      current_time=0;
+      current_timeout=0;
+      status=false;
+    }
+    void start(size_t timeout){
+      status=true;
+      current_time=0;
+      current_timeout=timeout;
+    }
+    void update(size_t ms_since_last_tick){
+      if(!status){
+        return;
+      }
+      current_time+=ms_since_last_tick;
+    }
+    bool trip(){
+      return current_time>=current_timeout&&status;
+    }
+    bool statu(){
+      return status;
+    }
+};
+
 //! \brief The "sender" part of a TCP implementation.
 
 //! Accepts a ByteStream, divides it up into segments and sends the
@@ -27,7 +57,6 @@ class TCPSender {
 
     //! retransmission timer for the connection
     unsigned int _initial_retransmission_timeout;
-    unsigned int _current_retransmission_timeout;
     unsigned int _retrans_count{0};
 
     //! outgoing stream of bytes that have not yet been sent
@@ -42,6 +71,8 @@ class TCPSender {
     //! two symple bit of segment
     bool _syn_sent{false};
     bool _fin_sent{false};
+
+    Timer _timer{};
 
   public:
     //! Initialize a TCPSender
