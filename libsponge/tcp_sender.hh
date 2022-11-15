@@ -9,37 +9,32 @@
 #include <functional>
 #include <queue>
 
+//! \brief The "sender" part of a TCP implementation.
 class Timer {
   private:
-    size_t current_time{0};
-    size_t current_timeout{0};
+    size_t _current_time{0};
+    size_t _current_tout{0};
     bool status{false};
-  public:
-    void reset(){
-      current_time=0;
-      current_timeout=0;
-      status=false;
-    }
-    void start(size_t timeout){
-      status=true;
-      current_time=0;
-      current_timeout=timeout;
-    }
-    void update(size_t ms_since_last_tick){
-      if(!status){
-        return;
-      }
-      current_time+=ms_since_last_tick;
-    }
-    bool trip(){
-      return current_time>=current_timeout&&status;
-    }
-    bool statu(){
-      return status;
-    }
-};
 
-//! \brief The "sender" part of a TCP implementation.
+  public:
+    void shutdown() {
+        _current_time = 0;
+        _current_tout = 0;
+        status = false;
+    }
+    void start(unsigned int timeout) {
+        status = true;
+        _current_time = 0;
+        _current_tout = timeout;
+    }
+    void update(size_t uptime) {
+        if (!status)
+            return;
+        _current_time += uptime;
+    }
+    bool trip() { return status && (_current_time >= _current_tout); }
+    bool state() { return status; }
+};
 
 //! Accepts a ByteStream, divides it up into segments and sends the
 //! segments, keeps track of which segments are still in-flight,
@@ -52,12 +47,13 @@ class TCPSender {
 
     //! outbound queue of segments that the TCPSender wants sent
     std::queue<TCPSegment> _segments_out{};
-    //! the buffer of segment.
-    std::deque<TCPSegment> _retrans_buf{};
+    //! outbound queue of segments that the TCPSender wants sent
+    std::vector<TCPSegment> _retrans_buf{};
 
     //! retransmission timer for the connection
     unsigned int _initial_retransmission_timeout;
-    unsigned int _retrans_count{0};
+    unsigned int _rts_timeout;
+    unsigned int _retrans_cnt{0};
 
     //! outgoing stream of bytes that have not yet been sent
     ByteStream _stream;
@@ -93,7 +89,7 @@ class TCPSender {
     void ack_received(const WrappingInt32 ackno, const uint16_t window_size);
 
     //! \brief Generate an empty-payload segment (useful for creating empty ACK segments)
-    void send_empty_segment();
+    void send_empty_segment(bool rst=false);
 
     //! \brief create and send segments to fill as much of the window as possible
     void fill_window();
