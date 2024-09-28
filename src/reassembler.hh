@@ -1,6 +1,8 @@
 #pragma once
 
 #include "byte_stream.hh"
+#include <map>
+#include <string>
 
 class Reassembler
 {
@@ -42,4 +44,6 @@ public:
 
 private:
   ByteStream output_; // the Reassembler writes to this ByteStream
+  std::map<size_t, std::string> _buf {};
+  size_t _eof_index { UINT64_MAX };
 };
