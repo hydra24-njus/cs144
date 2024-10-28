@@ -13,7 +13,7 @@ bool Writer::is_closed() const
 void Writer::push( string data )
 {
   // Your code here.
-  if ( error_ || is_closed() || data.empty() )
+  if (is_closed() || data.empty() )
     return;
   size_t bytes_to_write = min( data.length(), available_capacity() );
   _buf.append( data.substr( 0, bytes_to_write ) );
