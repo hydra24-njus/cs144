@@ -11,30 +11,34 @@
 #include <optional>
 #include <queue>
 
-class Timer {
-  private:
-    size_t _current_time{0};
-    size_t _current_tout{0};
-    bool status{false};
+class Timer
+{
+private:
+  size_t _current_time { 0 };
+  size_t _current_tout { 0 };
+  bool status { false };
 
-  public:
-    void shutdown() {
-        _current_time = 0;
-        _current_tout = 0;
-        status = false;
-    }
-    void start(unsigned int timeout) {
-        status = true;
-        _current_time = 0;
-        _current_tout = timeout;
-    }
-    void update(size_t uptime) {
-        if (!status)
-            return;
-        _current_time += uptime;
-    }
-    bool trip() { return status && (_current_time >= _current_tout); }
-    bool state() { return status; }
+public:
+  void shutdown()
+  {
+    _current_time = 0;
+    _current_tout = 0;
+    status = false;
+  }
+  void start( unsigned int timeout )
+  {
+    status = true;
+    _current_time = 0;
+    _current_tout = timeout;
+  }
+  void update( size_t uptime )
+  {
+    if ( !status )
+      return;
+    _current_time += uptime;
+  }
+  bool trip() { return status && ( _current_time >= _current_tout ); }
+  bool state() { return status; }
 };
 
 class TCPSender
@@ -74,15 +78,15 @@ private:
   ByteStream input_;
   Wrap32 isn_;
   uint64_t initial_RTO_ms_;
-  std::vector<TCPSenderMessage> _retrans_buf{};
+  std::vector<TCPSenderMessage> _retrans_buf {};
 
-  unsigned int _retrans_cnt{0};
+  unsigned int _retrans_cnt { 0 };
 
-  uint64_t _next_seqno{0};
-  uint32_t _window_size{1};
+  uint64_t _next_seqno { 0 };
+  uint32_t _window_size { 1 };
 
-  bool _syn_sent{false};
-  bool _fin_sent{false};
+  bool _syn_sent { false };
+  bool _fin_sent { false };
 
-  Timer _timer{};
+  Timer _timer {};
 };

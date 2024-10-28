@@ -43,6 +43,7 @@ public:
 #### 3. Remaining Bugs:
 
 我已通过所有测试点。
+
 ![lab3 pass](graphs/check3.png)
 
 - Optional: I had unexpected difficulty with: [describe]
