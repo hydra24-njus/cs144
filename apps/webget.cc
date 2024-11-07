@@ -4,12 +4,13 @@
 #include <iostream>
 #include <span>
 #include <string>
+#include "tcp_minnow_socket.hh"
 
 using namespace std;
 
 void get_URL( const string& host, const string& path )
 {
-  TCPSocket _tcp;
+  CS144TCPSocket _tcp;
   _tcp.connect( Address( host, "http" ) );
   string _input = "GET " + path + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n";
   _tcp.write( _input );
@@ -18,7 +19,7 @@ void get_URL( const string& host, const string& path )
     _tcp.read( buffer );
     cout << buffer;
   }
-  _tcp.close();
+  _tcp.wait_until_closed();
 }
 
 int main( int argc, char* argv[] )
