@@ -1,10 +1,11 @@
 #pragma once
 
-#include <queue>
-
 #include "address.hh"
 #include "ethernet_frame.hh"
 #include "ipv4_datagram.hh"
+#include <optional>
+#include <queue>
+#include <unordered_map>
 
 // A "network interface" that connects IP (the internet layer, or network layer)
 // with Ethernet (the network access layer, or link layer).
@@ -81,4 +82,17 @@ private:
 
   // Datagrams that have been received
   std::queue<InternetDatagram> datagrams_received_ {};
+
+  struct arp_member
+  {
+    EthernetAddress addr;
+    size_t life;
+  };
+
+  std::unordered_map<uint32_t, arp_member> _arp_table {}; //_arp_table[ip]=birthtime;
+  std::unordered_map<uint32_t, size_t> _waiting_list {};  // _waiting_list[ip]=birthtime;
+  std::vector<std::pair<Address, InternetDatagram>> _frame_buffer {};
+  size_t _timer { 0 };
+
+  inline EthernetFrame ARP_Request( uint32_t ip );
 };
