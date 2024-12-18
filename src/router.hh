@@ -35,4 +35,12 @@ public:
 private:
   // The router's collection of network interfaces
   std::vector<std::shared_ptr<NetworkInterface>> _interfaces {};
+
+  struct route_member {
+        uint8_t prefix_len{0};
+        size_t interface_num{0};
+        std::optional<Address> next_hop{std::nullopt};
+    };
+    std::unordered_map<uint32_t, route_member> _route_table{};
+    void route_one_datagram(InternetDatagram &dgram);
 };

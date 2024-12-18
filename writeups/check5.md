@@ -34,7 +34,7 @@ struct arp_member {
 
 #### 3. Remaining Bugs:
 
-![](graphs/check6.png)
+![](graphs/check5.png)
 由于测试了 route，这张截图是完成 lab7 后的状态。
 
 效率应该也是最优。更好的方法是查表转发的过程全部通过硬件实现，就和现在真实的交换机一样。
